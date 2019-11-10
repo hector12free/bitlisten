@@ -1,4 +1,7 @@
 var satoshi = 100000000;
+var wei = 10000000000000000000; // 10^18
+// var DONATION_ADDRESS = "0xf7050c2908b6c1ccdfb2a44b87853bcc3345e3b3";
+var donationAddress = "0xf7050c2908b6c1ccdfb2a44b87853bcc3345e3b3";
 var DELAY_CAP = 20000;
 var lastBlockHeight = 0;
 
@@ -17,7 +20,9 @@ TransactionSocket.init = function() {
 		TransactionSocket.connection.close();
 
 	if ('WebSocket' in window) {
-		var connection = new ReconnectingWebSocket('wss://ws.blockchain.info/inv');
+		var connection = new ReconnectingWebSocket('wss://mainnet.dagger.matic.network');
+		
+		var dagger = new Dagger("wss://mainnet.dagger.matic.network"); // dagger server
 		TransactionSocket.connection = connection;
 
 		StatusBox.reconnecting("blockchain");
@@ -50,16 +55,32 @@ TransactionSocket.init = function() {
 		connection.onerror = function(error) {
 			console.log('Blockchain.info: Connection Error: ' + error);
 		};
+		
+		dagger.on("latest:tx/+", function(data) {
+		// dagger.on("latest:tx/"+ donationAddress, function(data) {
+			console.log("===========================");
+			console.log("New block created: ", data);
+			// debugger;
+			// var data = JSON.parse(data);
+			var ethereum = data.value / wei;
+			console.log("Data value: " + data.value);
+			console.log("ETH value : " + ethereum);
+			console.log("===========================");
+			
+			new Transaction(ethereum);
+			return;
+		});
 
 		connection.onmessage = function(e) {
 			
-			var data = JSON.parse(e.data);
+			var data = JSON.parse(e);
+			console.log(data);
 			
 			if (data.op == "no_data") {
 			    TransactionSocket.close();
 			    setTimeout(TransactionSocket.init, transactionSocketDelay);
 			    transactionSocketDelay *= 2;
-			    console.log("connection borked, reconnecting");
+				console.log("connection borked, reconnecting");
 			}
 
 			// New Transaction

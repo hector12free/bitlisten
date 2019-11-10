@@ -16,3 +16,6 @@ node_modules
 .npm-debug.log
 tmp
 
+bitlisten.min.js
+bitlisten.min.js.map
+package-lock.json
